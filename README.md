@@ -135,7 +135,3 @@ demand-forecasting-pipeline/
 ```
 
 ---
-
-## 📝 License
-
-[Add your license here]
