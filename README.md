@@ -1,64 +1,205 @@
 📈 End-to-End Demand Forecasting & Deployment Pipeline
-This repository contains a production-ready machine learning pipeline for retail demand forecasting. The system automates the journey from raw data ingestion in MySQL to a containerized FastAPI inference service, utilizing XGBoost for high-precision time-series prediction.
-🏗️ System Architecture
-The project is structured into four distinct phases to simulate a real-world MLOps workflow:
-Data Ingestion (ETL): Automated migration of 900,000+ sales records into a Dockerized MySQL database.
-SQL Feature Engineering: Execution of complex relational logic (Window Functions) within the database to generate lag features and rolling averages, reducing memory overhead in Python.
-Predictive Modeling: Training an optimized XGBoost regressor using log-transformation and time-series cross-validation.
-Production Deployment: Wrapping the model in a FastAPI REST interface and containerizing the stack with Docker for scalable deployment.
+
+An end-to-end machine learning pipeline for retail demand forecasting — from raw data ingestion in MySQL to a containerized FastAPI inference service.
+
+The project simulates a real-world MLOps workflow including ETL, SQL-based feature engineering, model training with XGBoost, and production deployment using Docker.
+
+🏗️ Project Architecture
+
+The system is divided into four main stages:
+
+1️⃣ Data Ingestion (ETL)
+
+Migrates ~900k+ historical sales records into a Dockerized MySQL database.
+
+Uses SQLAlchemy as a bridge between Python and MySQL.
+
+2️⃣ SQL Feature Engineering
+
+Feature creation is performed directly inside MySQL using window functions:
+
+lag_1 → previous day sales
+
+lag_7 → same day last week
+
+rolling_avg_7d → 7-day moving average
+
+This reduces memory overhead in Python and improves scalability.
+
+3️⃣ Predictive Modeling
+
+Model: XGBoost Regressor
+
+Log transformation applied (np.log1p) to normalize skewed sales data.
+
+Time-aware validation split for realistic evaluation.
+
+4️⃣ Production Deployment
+
+Model wrapped inside a FastAPI REST API.
+
+Containerized using Docker.
+
+Interactive API documentation via Swagger UI.
+
 🛠️ Tech Stack
-Languages: Python 3.10+, SQL
-Database: MySQL (Dockerized)
-ML Frameworks: XGBoost, Scikit-Learn, Pandas, NumPy
-API & Deployment: FastAPI, Uvicorn, Docker
-Orchestration: SQLAlchemy (Python-SQL bridge)
-📊 Dataset: Store Item Demand Forecasting
-The project utilizes the Kaggle Store Item Demand Forecasting dataset, which includes:
-Timeline: 5 years of daily sales data.
-Granularity: 50 different items across 10 distinct store locations.[1][2][3]
-Volume: ~913,000 records.
-Target Variable: sales (integer count of items sold).
+
+Languages
+
+Python 3.10+
+
+SQL
+
+Database
+
+MySQL (Dockerized)
+
+Machine Learning
+
+XGBoost
+
+Scikit-Learn
+
+Pandas
+
+NumPy
+
+API & Deployment
+
+FastAPI
+
+Uvicorn
+
+Docker
+
+Database Integration
+
+SQLAlchemy
+
+📊 Dataset
+
+Source: Kaggle – Store Item Demand Forecasting
+
+Details:
+
+5 years of daily sales data
+
+50 items
+
+10 store locations
+
+~913,000 records
+
+Target variable: sales (integer count)
+
 🚀 Getting Started
-1. Prerequisites
-Docker Desktop installed and running.
-Python 3.10+ virtual environment.
-2. Setup Infrastructure
-Start the MySQL database container:
-code
-Bash
-docker run --name dem_forecast_db -e MYSQL_ROOT_PASSWORD=rishit123 -p 3306:3306 -d mysql:latest
-3. Installation
-code
-Bash
+1️⃣ Prerequisites
+
+Docker Desktop installed and running
+
+Python 3.10+
+
+Virtual environment recommended
+
+2️⃣ Start MySQL Container
+docker run --name dem_forecast_db \
+  -e MYSQL_ROOT_PASSWORD=rishit123 \
+  -p 3306:3306 \
+  -d mysql:latest
+3️⃣ Install Dependencies
 pip install -r requirements.txt
-[3][4]
-4. Execution Pipeline
-Run the scripts in sequence to build the system:
-python 1_ingest_data.py: Ingest raw data into MySQL.
-python 2_feature_engineering.py: Generate SQL features (Lags, Rolling Averages).
-python 3_train_model.py: Train and save the XGBoost model.
-python 4_app.py: Spin up the FastAPI server locally.
-🧪 Model Performance & Features
-Feature Engineering Logic:
-To capture seasonality and trends, the following features were engineered:
-Lags: lag_1 (yesterday's sales), lag_7 (same day last week).
-Rolling Windows: 7-day moving average of sales.
-Temporal Features: Month, Day of Week, Is_Weekend, Day of Month.
-Performance:
-Evaluation Metric: MAPE (Mean Absolute Percentage Error).
-Result: Achieved a MAPE of ~12.7% on the 2017 test set.
-Optimization: Utilized Log-Transformation (np.log1p) on the target variable to normalize the distribution and improve prediction accuracy for low-volume items.
+4️⃣ Run the Pipeline
+
+Execute scripts in order:
+
+python 1_ingest_data.py
+python 2_feature_engineering.py
+python 3_train_model.py
+python 4_app.py
+
+API will be available at:
+
+http://localhost:8000/docs
+🧪 Model Performance
+
+Evaluation Metric:
+
+MAPE (Mean Absolute Percentage Error)
+
+Result:
+
+~12.7% MAPE on 2017 test set
+
+📌 Engineered Features
+Lag Features
+
+lag_1
+
+lag_7
+
+Rolling Window
+
+7-day moving average (rolling_avg_7d)
+
+Temporal Features
+
+Month
+
+Day of week
+
+Day of month
+
+Is weekend flag
+
 🐳 Docker Deployment
-To build and run the production-grade container:
-code
-Bash
+
+Build and run the API container:
+
 # Build image
 docker build -t demand-forecast-app .
 
 # Run container
 docker run -p 8000:8000 demand-forecast-app
-The API will be available at http://localhost:8000/docs via Swagger UI.
-🧠 Key Takeaways for Interviews
-Why MySQL for Feature Engineering? Moving the calculation of rolling averages to the database layer significantly reduces the memory footprint of the Python environment, allowing the system to scale to millions of records.
-Why XGBoost? XGBoost handles tabular data effectively and can capture complex non-linear relationships in seasonal demand that traditional ARIMA models might miss.
-Why Log-Transformation? Sales data is often right-skewed. Taking the log of the target variable helps the model treat percentage errors equally across low and high-volume items.
+
+Swagger UI:
+
+http://localhost:8000/docs
+💡 Design Decisions
+Why SQL for Feature Engineering?
+
+Performing lag and rolling window computations inside MySQL:
+
+Reduces Python memory usage
+
+Keeps transformation logic closer to the data
+
+Improves scalability for large datasets
+
+Why XGBoost?
+
+Strong performance on structured/tabular data
+
+Handles non-linear seasonal patterns
+
+Robust to feature interactions
+
+Why Log-Transform the Target?
+
+Retail sales are typically right-skewed.
+Applying log1p:
+
+Stabilizes variance
+
+Improves performance on low-volume items
+
+Reduces relative error imbalance
+
+📦 Project Structure
+.
+├── 1_ingest_data.py
+├── 2_feature_engineering.py
+├── 3_train_model.py
+├── 4_app.py
+├── demand_model.pkl
+├── requirements.txt
+└── Dockerfile
